@@ -1,0 +1,42 @@
+# H2 Experiment Configuration: Candidate Filter Ablation Study
+
+experiment:
+  name: H2_Candidate_Filter
+  description: >
+    Evaluate the impact of the candidate filter (spatial proximity and route direction)
+    on average decision time (t_dec) and solution quality (total distance D, service rate SR).
+    Paired by instance and seed.
+
+  hypothesis:
+    H0_time: Candidate filtering does not decrease decision time (t_dec_on >= t_dec_off).
+    H1_time: Candidate filtering significantly decreases decision time (t_dec_on < t_dec_off).
+    test: one-sided Wilcoxon signed-rank
+    alpha: 0.05
+    bonferroni_correction: 6  # number of instances
+
+  instances:
+    - lc101
+    - lc201
+    - lr101
+    - lr201
+    - lrc101
+    - lrc201
+
+  data_dir: data/li_lim_100
+  seeds: 30
+  seed_start: 1
+  rho: 0.5
+  lead_time: 15.0
+
+  candidate_k: 5  # Number of candidate vehicles to evaluate per request
+
+  conditions:
+    - filter_enabled: false
+      label: FILTER_OFF
+    - filter_enabled: true
+      label: FILTER_ON
+
+  output:
+    raw_csv: results/raw/h2_raw.csv
+    summary_table: results/tables/h2_comparison.md
+    figures_dir: results/figures/h2

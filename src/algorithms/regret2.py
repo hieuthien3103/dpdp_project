@@ -61,8 +61,8 @@ class Regret2Insertion:
             return float('inf'), -1
             
         min_allowed_idx = 0
-        if frozen_node is not None and frozen_node in vehicle.route:
-            frozen_idx = vehicle.route.index(frozen_node)
+        if frozen_node is not None and frozen_node in vehicle.route_nodes:
+            frozen_idx = vehicle.route_nodes.index(frozen_node)
             min_allowed_idx = frozen_idx + 1
             
         best_cost = float('inf')

@@ -58,8 +58,8 @@ class ALNSOperators:
                 if vehicle.current_load + getattr(req, 'demand', 1.0) <= self.capacity_constraint:
                     frozen_node = frozen_commitments.get(vid)
                     min_allowed_idx = 0
-                    if frozen_node is not None and frozen_node in vehicle.route:
-                        min_allowed_idx = vehicle.route.index(frozen_node) + 1
+                    if frozen_node is not None and frozen_node in vehicle.route_nodes:
+                        min_allowed_idx = vehicle.route_nodes.index(frozen_node) + 1
                         
                     for idx in range(min_allowed_idx, len(vehicle.route) + 1):
                         cost = getattr(req, 'e_pickup', 0.0) * 0.1 + idx * 0.5

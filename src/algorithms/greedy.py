@@ -4,9 +4,17 @@ from src.simulation.entities import Request, Vehicle
 
 
 class GreedyInsertion:
-    def __init__(self, capacity_constraint: float, depot_xy: Tuple[float, float] = (0.0, 0.0)):
+    def __init__(
+        self,
+        capacity_constraint: float,
+        depot_xy: Tuple[float, float] = (0.0, 0.0),
+        filter_candidates: bool = False,
+        candidate_k: int = 5,
+    ):
         self.capacity_constraint = capacity_constraint
         self.depot_xy = depot_xy
+        self.filter_candidates = filter_candidates
+        self.candidate_k = candidate_k
         self._node_coords: Dict[int, Tuple[float, float]] = {}
 
     @staticmethod
@@ -33,20 +41,46 @@ class GreedyInsertion:
         """Get coordinates for a node, defaulting to depot if unknown."""
         return self._node_coords.get(node_id, self.depot_xy)
 
+    def _filter_promising_vehicles(
+        self,
+        req: Request,
+        vehicles: Dict[int, Vehicle],
+    ) -> List[int]:
+        """
+        Bộ lọc ứng viên (Candidate Filter) cho H2:
+        Lọc top candidate_k xe hứa hẹn nhất dựa trên khoảng cách từ vị trí
+        hiện tại (hoặc điểm cuối) của xe tới điểm pickup của đơn hàng.
+        Loại trừ các xe đã đầy tải không thể nhận thêm req.demand.
+        """
+        pickup_coord = self._get_coord(req.pickup_node)
+        scored_vehicles = []
+
+        for vid, vehicle in vehicles.items():
+            if vehicle.current_load + req.demand > self.capacity_constraint:
+                continue
+
+            # Vị trí tham chiếu của xe: điểm cuối lộ trình hoặc vị trí hiện tại
+            if vehicle.route_nodes:
+                ref_coord = self._get_coord(vehicle.route_nodes[-1])
+            elif vehicle.current_x is not None and vehicle.current_y is not None:
+                ref_coord = (vehicle.current_x, vehicle.current_y)
+            else:
+                ref_coord = self._get_coord(vehicle.current_node)
+
+            dist = self._euclidean(ref_coord, pickup_coord)
+            scored_vehicles.append((dist, vid))
+
+        scored_vehicles.sort(key=lambda x: x[0])
+        return [vid for _, vid in scored_vehicles[:self.candidate_k]]
+
     def solve(self, pending_requests: List[Request], vehicles: Dict[int, Vehicle], frozen_commitments: Dict[int, int]) -> List[Request]:
         """
-        Greedy Insertion baseline:
+        Greedy Insertion:
         Repeatedly find and insert the request with the smallest insertion cost
         increase into available vehicles, respecting frozen commitments (H1).
+        Supports Candidate Filtering (H2).
         """
         self._build_node_coords(pending_requests, vehicles)
-
-        # Also register coordinates from requests already in vehicle routes
-        for vehicle in vehicles.values():
-            for node_id in vehicle.route_nodes:
-                if node_id not in self._node_coords:
-                    # Try to find from known_requests if available; depot fallback
-                    pass  # coords should already be populated from pending_requests
 
         unassigned = pending_requests.copy()
 
@@ -58,7 +92,13 @@ class GreedyInsertion:
             best_delivery_pos = -1
 
             for req in unassigned:
-                for vid, vehicle in vehicles.items():
+                if self.filter_candidates:
+                    candidate_vids = self._filter_promising_vehicles(req, vehicles)
+                else:
+                    candidate_vids = list(vehicles.keys())
+
+                for vid in candidate_vids:
+                    vehicle = vehicles[vid]
                     frozen_node = frozen_commitments.get(vid)
                     result = self._evaluate_insertion(req, vehicle, frozen_node)
                     cost, pickup_pos, delivery_pos = result

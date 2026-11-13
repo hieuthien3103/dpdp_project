@@ -61,9 +61,16 @@ class SimulationEngine:
             if req.is_delivered
         )
 
+        avg_decision_time = (
+            sum(self.des_engine.decision_times) / len(self.des_engine.decision_times)
+            if self.des_engine.decision_times else 0.0
+        )
+
         return {
             "total_requests": total_requests,
             "serviced_count": serviced_count,
             "pending_count": pending_count,
-            "vehicles": self.des_engine.vehicles
+            "vehicles": self.des_engine.vehicles,
+            "decision_times": self.des_engine.decision_times,
+            "avg_decision_time": avg_decision_time
         }

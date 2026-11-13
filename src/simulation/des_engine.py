@@ -22,6 +22,9 @@ class DESEngine:
         self.requests_by_id: Dict[int, Request] = {}
         self.depot_info: Optional[Dict[str, Any]] = None
 
+        # Tracking decision time
+        self.decision_times: List[float] = []
+
         # Kích hoạt chu kỳ E4 đầu tiên
         self._schedule_next_reoptimization(0.0)
 
@@ -82,16 +85,6 @@ class DESEngine:
         if self.depot_info is not None:
             return (self.depot_info.get('x', 0.0), self.depot_info.get('y', 0.0))
         return (0.0, 0.0)
-
-    # ------------------------------------------------------------------
-    # Helper: determine the next stop for a vehicle given a request
-    # ------------------------------------------------------------------
-    def _next_stop_for_request(self, req: Request):
-        """Return (node_id, x, y, stop_type) for the next stop of a request."""
-        if not req.is_picked_up:
-            return (req.pickup_node, req.pickup_x, req.delivery_x and req.pickup_x, req.pickup_y, "pickup")
-        else:
-            return (req.delivery_node, req.delivery_x, req.delivery_y, "delivery")
 
     # ------------------------------------------------------------------
     # Helper: dispatch a vehicle to its next stop
@@ -174,7 +167,12 @@ class DESEngine:
         # Nếu FREEZE_OFF -> cam kết rỗng {}; Nếu FREEZE_ON -> lấy cam kết thực tế
         frozen_commitments = self._freeze_commitments() if freeze_enabled else {}
 
+        import time
+        t_start = time.perf_counter()
         unserved = solver.solve(self.pending_requests, self.vehicles, frozen_commitments)
+        t_elapsed = time.perf_counter() - t_start
+        self.decision_times.append(t_elapsed)
+
         self.pending_requests = unserved
 
         # Dispatch idle vehicles that now have routes
