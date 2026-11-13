@@ -18,10 +18,29 @@ class SolutionEvaluator:
         """
         # 1. Tính tổng quãng đường di chuyển (D)
         total_distance = 0.0
+        node_coords = {}
+        for req in total_known_requests:
+            if req.pickup_node is not None and req.pickup_x is not None and req.pickup_y is not None:
+                node_coords[req.pickup_node] = (req.pickup_x, req.pickup_y)
+            if req.delivery_node is not None and req.delivery_x is not None and req.delivery_y is not None:
+                node_coords[req.delivery_node] = (req.delivery_x, req.delivery_y)
+
         for vehicle in vehicles.values():
-            # Sử dụng hệ số quy đổi hoặc chuẩn bị tích hợp khoảng cách thực tế từ ma trận
-            total_distance += len(vehicle.route) * 12.5
-            
+            route_nodes = list(vehicle.route_node_sequence())
+            if not route_nodes:
+                total_distance += len(vehicle.route) * 12.5
+                continue
+
+            prev_node = vehicle.current_node if vehicle.current_node is not None else 0
+            for node in route_nodes:
+                if node in node_coords and prev_node in node_coords:
+                    x1, y1 = node_coords[prev_node]
+                    x2, y2 = node_coords[node]
+                    total_distance += ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+                elif prev_node != node:
+                    total_distance += 1.0
+                prev_node = node
+
         # 2. Tính tỷ lệ phục vụ và từ chối
         n_total = len(total_known_requests)
         service_rate = (served_requests_count / n_total) if n_total > 0 else 0.0

@@ -87,10 +87,15 @@ class DESEngine:
     def _freeze_commitments(self) -> Dict[int, int]:
         """
         Khóa các node không được phép thay đổi.
-        Nếu xe đang trên đường, điểm đến tiếp theo BẮT BUỘC phải đến để bảo toàn cam kết.
+        Ở đây xét nút đầu tiên của route hiện tại như một cam kết thực tế.
+        Điều này đảm bảo H1 có thể được kích hoạt ngay cả khi mô phỏng chưa
+        triển khai đầy đủ chuyển động của xe theo thời gian.
         """
         commitments = {}
         for vid, vehicle in self.vehicles.items():
-            if vehicle.is_moving and vehicle.destination_node is not None:
+            route_nodes = vehicle.route_node_sequence()
+            if route_nodes:
+                commitments[vid] = route_nodes[0]
+            elif vehicle.is_moving and vehicle.destination_node is not None:
                 commitments[vid] = vehicle.destination_node
         return commitments
