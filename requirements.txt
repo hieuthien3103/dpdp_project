@@ -1,0 +1,7 @@
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+alns>=5.0.0      # Thư viện ALNS chuẩn của Wouda & Lan
+osmnx>=1.3.0     # Trích xuất dữ liệu bản đồ OSM (Quận 1, Quận 3)
+networkx>=3.0    # Tính toán ma trận đường đi ngắn nhất
+pyyaml>=6.0      # Đọc cấu hình thực nghiệm

@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+venv/
+*.zip
+*.osm.pbf
+vietnam-*.osm.pbf
+!data/hcm/processed/*.graphml
