@@ -8,17 +8,36 @@ class SimulationEngine:
         self.reoptimization_interval = reoptimization_interval
         self.des_engine = DESEngine(time_horizon, reoptimization_interval)
 
-    def setup_scenario(self, requests: List[Request], vehicles: List[Vehicle]):
+    def setup_scenario(
+        self,
+        requests: List[Request],
+        vehicles: List[Vehicle],
+        depot_info: Optional[Dict[str, Any]] = None,
+    ):
         """
         Thiết lập kịch bản ban đầu cho mô phỏng:
         - Đưa danh sách phương tiện vào hệ thống.
-        - Phân loại đơn hàng: Đơn tĩnh đưa thẳng vào pending, 
+        - Phân loại đơn hàng: Đơn tĩnh đưa thẳng vào pending,
           đơn động lên lịch sự kiện E1_NEW_REQUEST tại mốc thời gian tau_r.
+        - Truyền depot_info và đăng ký requests vào DES engine.
         """
+        # Pass depot info to DES engine
+        if depot_info is not None:
+            self.des_engine.set_depot_info(depot_info)
+
+        # Set vehicle start coordinates from depot
         for vehicle in vehicles:
+            if depot_info is not None:
+                if vehicle.current_x is None:
+                    vehicle.current_x = depot_info.get('x', 0.0)
+                if vehicle.current_y is None:
+                    vehicle.current_y = depot_info.get('y', 0.0)
             self.des_engine.add_vehicle(vehicle)
 
         for req in requests:
+            # Register every request for ID-based lookup
+            self.des_engine.register_request(req)
+
             if req.tau_r <= 0.0:
                 self.des_engine.known_requests.append(req)
                 self.des_engine.pending_requests.append(req)
@@ -32,17 +51,15 @@ class SimulationEngine:
         Kích hoạt vòng lặp mô phỏng, truyền cờ freeze_enabled vào DES Engine để kiểm soát H1.
         """
         self.des_engine.run(solver, freeze_enabled=freeze_enabled)
-        
+
         total_requests = len(self.des_engine.known_requests)
         pending_count = len(self.des_engine.pending_requests)
-        
-        serviced_count = 0
-        serviced_ids = set()
-        for veh in self.des_engine.vehicles.values():
-            for r_id in veh.route:
-                if r_id not in serviced_ids:
-                    serviced_ids.add(r_id)
-                    serviced_count += 1
+
+        # Count actually delivered requests
+        serviced_count = sum(
+            1 for req in self.des_engine.requests_by_id.values()
+            if req.is_delivered
+        )
 
         return {
             "total_requests": total_requests,

@@ -1,0 +1,39 @@
+# H1 Experiment Configuration: Frozen-Commitment Mechanism
+
+experiment:
+  name: H1_Frozen_Commitment
+  description: >
+    Compare Greedy Insertion with frozen-commitment enabled vs disabled.
+    Paired by instance and seed.
+
+  hypothesis:
+    H0: The distribution of paired differences is symmetric about zero.
+    H1: The distribution of paired differences is shifted positively (D_on < D_off).
+    test: one-sided Wilcoxon signed-rank
+    alpha: 0.05
+    bonferroni_correction: 6  # number of instances
+
+  instances:
+    - lc101
+    - lc201
+    - lr101
+    - lr201
+    - lrc101
+    - lrc201
+
+  data_dir: data/li_lim_100
+  seeds: 30
+  seed_start: 1
+  rho: 0.5
+  lead_time: 15.0
+
+  conditions:
+    - freeze_enabled: false
+      label: FREEZE_OFF
+    - freeze_enabled: true
+      label: FREEZE_ON
+
+  output:
+    raw_csv: results/raw/h1_raw.csv
+    summary_table: results/tables/h1_comparison.md
+    figures_dir: results/figures/h1

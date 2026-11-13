@@ -1,15 +1,15 @@
-# H1 comparison summary
+# H1 Comparison Summary — Frozen-Commitment Mechanism
 
-Summary across all 30 paired seeds for each Li & Lim instance. `D` is the current prototype evaluator's distance computed from route-node coordinates; it is not yet a road-network travel distance.
+Summary across all 30 paired seeds for each Li & Lim instance. Distance `D` is the Euclidean travel distance accumulated by the DES engine through actual vehicle movement events (pickup → delivery stop sequences). The freeze mechanism locks the vehicle's next committed stop so the solver cannot reassign it during reoptimization.
 
 | Instance | Paired seeds | Requests | Served (off/on) | Service rate (off/on) | D mean, freeze off | D mean, freeze on | Δ D (on − off) |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| lc101 | 30 | 53 | 53 / 53 | 100% / 100% | 2295.28 | 1662.63 | -632.65 |
-| lc201 | 30 | 51 | 45.27 / 45.27 | 88.76% / 88.76% | 2684.67 | 2013.59 | -671.07 |
-| lr101 | 30 | 53 | 53 / 53 | 100% / 100% | 2273.57 | 2096.61 | -176.97 |
-| lr201 | 30 | 51 | 51 / 51 | 100% / 100% | 2582.95 | 1921.36 | -661.59 |
-| lrc101 | 30 | 53 | 53 / 53 | 100% / 100% | 2882.00 | 2670.77 | -211.23 |
-| lrc201 | 30 | 51 | 51 / 51 | 100% / 100% | 3910.50 | 3088.42 | -822.08 |
+| lc101 | 30 | 53 | 53.00 / 53.00 | 100.0% / 100.0% | 1401.86 | 1440.79 | +38.93 |
+| lc201 | 30 | 51 | 39.43 / 37.53 | 77.3% / 73.6% | 1730.48 | 1664.38 | -66.10 |
+| lr101 | 30 | 53 | 53.00 / 53.00 | 100.0% / 100.0% | 1707.13 | 1706.11 | -1.02 |
+| lr201 | 30 | 51 | 41.10 / 39.63 | 80.6% / 77.7% | 1694.50 | 1627.86 | -66.64 |
+| lrc101 | 30 | 53 | 53.00 / 53.00 | 100.0% / 100.0% | 2024.82 | 2030.23 | +5.41 |
+| lrc201 | 30 | 51 | 27.97 / 25.20 | 54.8% / 49.4% | 1811.82 | 1596.92 | -214.91 |
 
 ## Statistical definition
 
@@ -17,21 +17,59 @@ For each paired instance-seed trial \(i\), define \(d_i = D_{\text{off},i} - D_{
 
 - \(H_0\): the distribution of paired differences is symmetric about zero.
 - \(H_1\): the distribution of paired differences is shifted positively (\(D_{\text{on}} < D_{\text{off}}\)).
-- Use a one-sided Wilcoxon signed-rank test with \(\alpha = 0.05\), pairing by the same instance and seed. The directional alternative should be specified before examining results.
-- Report the paired rank-biserial correlation \(r_{rb}=(W^+ - W^-)/(W^+ + W^-)\). This is the appropriate rank-based effect size for paired observations. Cliff's delta is intended for independent samples and is not used here.
+- Use a one-sided Wilcoxon signed-rank test with \(\alpha = 0.05\), pairing by the same instance and seed. The directional alternative is specified before examining results.
+- Report the paired rank-biserial correlation \(r_{rb}=(W^+ - W^-)/(W^+ + W^-)\). This is the appropriate rank-based effect size for paired observations.
 
 ## Wilcoxon results
 
-Across all 180 paired trials, every difference was positive. The average paired reduction \(D_{\text{off}} - D_{\text{on}}\) was 529.26 in the evaluator's distance units (median: 614.85). The one-sided Wilcoxon test gave \(W^+=16290\), \(W^-=0\), \(p=1.37\times10^{-31}\) (normal approximation), and \(r_{rb}=1.00\).
+### Overall (all 180 paired trials pooled)
 
-The per-instance tests each had \(n=30\), \(W^+=465\), \(W^-=0\), \(p=9.31\times10^{-10}\), and \(r_{rb}=1.00\). These remain significant with a Bonferroni-adjusted threshold of \(0.05/6\). The observed reductions are directionally consistent across all six instances.
+Across all 180 paired trials (174 non-zero differences), the one-sided Wilcoxon test gave:
 
-## Interpretation and validity limitation
+- \(W^+ = 10001.5\), \(W^- = 5223.5\)
+- \(p = 1.65 \times 10^{-4}\) (significant at \(\alpha = 0.05\))
+- \(r_{rb} = 0.3138\) (small-to-medium effect size)
+- Mean paired reduction \(\bar{d} = 50.72\) distance units, Median \(\tilde{d} = 18.56\)
 
-The output is statistically consistent with H1 **within the current prototype**, but it is not yet sufficient to claim that route freezing reduces real vehicle travel distance. The current evaluator measures coordinate distances along the planned route-node sequence, not distance traveled on a road network, and the DES does not execute vehicle movement events; the freeze mechanism is based on the first planned route node. Therefore, describe these as preliminary prototype results, not a validated operational or road-network result. A confirmatory H1 experiment requires actual pickup/delivery stop sequencing, vehicle movement and commitment lifecycle, a consistent distance matrix/network metric, and rerunning the paired trials.
+### Per-instance results (Bonferroni-adjusted, k=6)
 
-## Draft text for a report
+| Instance | n | W+ | W- | p (raw) | p (adjusted) | r_rb | Significant? |
+|---|---:|---:|---:|---:|---:|---:|---|
+| lc101 | 30 | 149.0 | 316.0 | 0.9580 | 1.0000 | -0.3591 | No |
+| lc201 | 29 | 352.0 | 83.0 | 0.0018 | 0.0109 | 0.6184 | **Yes** |
+| lr101 | 30 | 239.0 | 226.0 | 0.4516 | 1.0000 | 0.0280 | No |
+| lr201 | 28 | 296.0 | 110.0 | 0.0171 | 0.1026 | 0.4581 | No |
+| lrc101 | 29 | 200.0 | 235.0 | 0.6474 | 1.0000 | -0.0805 | No |
+| lrc201 | 28 | 375.0 | 31.0 | 0.0000 | 0.0003 | 0.8473 | **Yes** |
 
-> Để đánh giá H1, mỗi cặp thực nghiệm được ghép theo cùng bộ dữ liệu và cùng seed. Đặt \(d_i=D_{\text{off},i}-D_{\text{on},i}\), trong đó \(d_i>0\) biểu thị cơ chế đóng băng cho giá trị khoảng cách thấp hơn. Kiểm định Wilcoxon signed-rank một phía được sử dụng với mức ý nghĩa \(\alpha=0{,}05\), với giả thuyết đối \(H_1\) là phân phối độ lệch được dịch chuyển theo hướng \(D_{\text{on}}<D_{\text{off}}\). Trên 180 cặp quan sát, cả 180 cặp đều có \(d_i>0\); mức giảm trung bình là 529,26 đơn vị khoảng cách (trung vị 614,85). Kiểm định cho \(W^+=16290\), \(W^-=0\), \(p=1{,}37\times10^{-31}\), cùng hệ số tương quan hạng biserial ghép cặp \(r_{rb}=1{,}00\). Kết quả theo từng instance cũng có ý nghĩa sau hiệu chỉnh Bonferroni. Do đó, kết quả prototype hiện tại có xu hướng và ý nghĩa thống kê phù hợp với H1. Tuy nhiên, vì khoảng cách được tính từ tọa độ các node trong route dự kiến thay vì quãng đường mạng đường thực tế, và mô phỏng chưa thực thi đầy đủ chuyển động xe, kết quả này chỉ nên được xem là sơ bộ; chưa đủ để kết luận H1 đã được xác nhận trong điều kiện vận hành thực tế.
+## Interpretation
+
+The overall Wilcoxon test rejects \(H_0\) with \(p = 1.65 \times 10^{-4}\), indicating that freezing committed routes provides a statistically significant reduction in total travel distance when pooling all instances.
+
+However, the per-instance analysis reveals a **heterogeneous** pattern:
+
+1. **Instances with wide time windows** (lc201, lr201, lrc201): Freezing tends to reduce distance. This makes sense because with wider time windows, the greedy solver has more flexibility, and freezing prevents costly last-minute rerouting. lc201 and lrc201 are significant after Bonferroni correction.
+
+2. **Instances with tight time windows** (lc101, lr101, lrc101): Freezing has no significant effect, or may slightly increase distance. Tight time windows already constrain the solver's choices, so the commitment mechanism adds little benefit.
+
+3. **Trade-off with service rate**: On instances where freeze_on reduces distance (lc201, lr201, lrc201), there is a slight decrease in service rate (fewer requests served). The commitment mechanism may cause some requests to become infeasible when the solver cannot reassign vehicles.
+
+The overall effect size \(r_{rb} = 0.31\) represents a small-to-medium effect. The mechanism's benefit is instance-dependent, with the strongest improvement on problems with wide time windows and high dynamism.
+
+## Figures
+
+- [Paired differences boxplot](../figures/h1/h1_paired_differences.png)
+- [Distance comparison bar chart](../figures/h1/h1_distance_comparison.png)
+- [Effect size forest plot](../figures/h1/h1_effect_size.png)
+
+## Draft text for report
+
+> Để đánh giá H1, mỗi cặp thực nghiệm được ghép theo cùng bộ dữ liệu và cùng seed. Đặt \(d_i=D_{\text{off},i}-D_{\text{on},i}\), trong đó \(d_i>0\) biểu thị cơ chế đóng băng cho giá trị khoảng cách thấp hơn. Kiểm định Wilcoxon signed-rank một phía được sử dụng với mức ý nghĩa \(\alpha=0{,}05\), với giả thuyết đối \(H_1\) là phân phối độ lệch được dịch chuyển theo hướng \(D_{\text{on}}<D_{\text{off}}\).
+>
+> Trên 180 cặp quan sát (174 hiệu khác 0), kiểm định cho \(W^+=10001{,}5\), \(W^-=5223{,}5\), \(p=1{,}65\times10^{-4}\), cùng hệ số tương quan hạng biserial ghép cặp \(r_{rb}=0{,}31\). Mức giảm trung bình là 50,72 đơn vị khoảng cách (trung vị 18,56). Kết quả cho phép bác bỏ \(H_0\) ở mức tổng thể.
+>
+> Phân tích theo từng instance cho thấy tác động không đồng nhất: các instance có cửa sổ thời gian rộng (lc201, lrc201) có ý nghĩa thống kê sau hiệu chỉnh Bonferroni (\(p_{adj}=0{,}011\) và \(0{,}0003\)), với kích thước hiệu ứng lớn (\(r_{rb}=0{,}62\) và \(0{,}85\)). Các instance có cửa sổ thời gian chặt (lc101, lr101, lrc101) không có sự khác biệt có ý nghĩa.
+>
+> Cơ chế đóng băng cam kết có hiệu quả rõ rệt nhất trên các bài toán có cửa sổ thời gian rộng, nơi solver có nhiều không gian tái tối ưu. Tuy nhiên, tồn tại đánh đổi nhỏ với tỷ lệ phục vụ: một số yêu cầu có thể không khả thi khi lộ trình bị khóa.
 
 Raw per-seed data: [`../raw/h1_raw.csv`](../raw/h1_raw.csv).

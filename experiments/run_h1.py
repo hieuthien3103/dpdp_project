@@ -104,7 +104,7 @@ def _run_condition(
 ) -> dict[str, Any]:
     
     # 1. Generate dynamic requests & capacity
-    requests, _depot, capacity = parse_and_dynamize_li_lim(
+    requests, depot_info, capacity = parse_and_dynamize_li_lim(
         str(instance_path),
         rho=rho,
         lead_time=lead_time,
@@ -121,12 +121,13 @@ def _run_condition(
     # 3. Reset random state
     _set_random_seed(seed)
 
-    # 4. Setup Simulation Engine
+    # 4. Setup Simulation Engine (now passes depot_info for coordinates)
     sim_engine = SimulationEngine(time_horizon=1000.0, reoptimization_interval=10.0)
-    sim_engine.setup_scenario(requests, vehicles)
+    sim_engine.setup_scenario(requests, vehicles, depot_info=depot_info)
 
-    # 5. Instantiate Solver (Greedy with/without route freezing support)
-    solver = GreedyInsertion(capacity)
+    # 5. Instantiate Solver (Greedy with depot coordinates for Euclidean cost)
+    depot_xy = (depot_info.get("x", 0.0), depot_info.get("y", 0.0))
+    solver = GreedyInsertion(capacity, depot_xy=depot_xy)
 
     # Note: If freeze_enabled is False, we pass empty frozen commitments
     # To properly simulate H1 behavior, the DES engine handles reoptimization cycles.

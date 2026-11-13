@@ -1,0 +1,25 @@
+# ALNS-D Base Configuration
+# Reference: Table 2.4 — Standard ALNS-D Hyperparameters
+
+alns:
+  max_iterations: 1000
+  time_budget: 2.0  # seconds per reoptimization cycle
+  cooling_rate: 0.98
+  initial_temperature: 100.0
+  removal_fraction: 0.3  # fraction of requests to remove
+
+  # Operator weights (adaptive)
+  weights:
+    sigma_1: 33  # new best solution reward
+    sigma_2: 9   # better than current
+    sigma_3: 3   # accepted (SA criterion)
+    reaction_factor: 0.1  # rho for weight update
+
+simulation:
+  time_horizon: 1000.0
+  reoptimization_interval: 10.0
+  vehicle_speed: 1.0
+
+evaluation:
+  alpha: 0.05  # significance level
+  distance_metric: euclidean  # or road_network

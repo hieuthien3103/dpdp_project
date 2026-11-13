@@ -1,0 +1,3 @@
+instance,seed,rho,freeze_enabled,vehicle_count,request_count,dynamic_request_count,served_count,unserved_count,service_rate_SR,rejection_rate_RR,total_distance_D,active_vehicles,measurement_status
+lc101,1,0.5,false,25,53,27,53,0,1.0,0.0,1344.66,4,official_simulation_verified
+lc101,1,0.5,true,25,53,27,53,0,1.0,0.0,1463.22,4,official_simulation_verified
