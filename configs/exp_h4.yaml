@@ -1,0 +1,43 @@
+# H4 Experiment Configuration: Dynamism Sensitivity & Relative Gap of ALNS-D
+
+experiment:
+  name: H4_Dynamism_Sensitivity
+  description: >
+    Evaluate the relative efficiency (Gap %) of ALNS-D compared to the Greedy Insertion baseline
+    across increasing degrees of problem dynamism rho in {0.1, 0.3, 0.5, 0.7, 0.9}.
+    Hypothesis: The performance gap of ALNS-D over Greedy increases markedly as rho increases.
+
+  hypothesis:
+    H0: The relative performance gap Gap(rho) between ALNS-D and Greedy remains constant or decreases as rho increases.
+    H1: The relative performance gap Gap(rho) of ALNS-D over Greedy increases markedly as dynamism rho increases.
+    test: Spearman rank correlation and paired Wilcoxon test per dynamism level
+    alpha: 0.05
+
+  instances:
+    - lc101
+    - lc201
+    - lr101
+    - lr201
+    - lrc101
+    - lrc201
+
+  data_dir: data/li_lim_100
+  seeds: 10
+  seed_start: 1
+  lead_time: 15.0
+
+  rhos:
+    - 0.1  # Low dynamism (mostly static)
+    - 0.3  # Moderate-low dynamism
+    - 0.5  # Standard benchmark dynamism
+    - 0.7  # High dynamism
+    - 0.9  # Extreme dynamism (almost all dynamic)
+
+  solvers:
+    - Greedy: GreedyInsertion baseline with frozen commitments
+    - ALNS_D: Full ALNS-D solver with B=0.5s
+
+  output:
+    raw_csv: results/raw/h4_raw.csv
+    summary_table: results/tables/h4_comparison.md
+    figures_dir: results/figures/h4

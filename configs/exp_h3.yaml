@@ -1,0 +1,45 @@
+# H3 Experiment Configuration: Adaptive Weights under Tight Time Budgets
+
+experiment:
+  name: H3_Adaptive_Weights_Budget_Sensitivity
+  description: >
+    Evaluate the contribution and potential degradation of the ALNS adaptive weight mechanism
+    as the computational time budget B per reoptimization cycle is constricted.
+    Compares Adaptive Weights (ADAPTIVE_ON) vs Uniform Random Operator Selection (ADAPTIVE_OFF)
+    across a spectrum of time budgets B in {0.05s, 0.2s, 1.0s}.
+
+  hypothesis:
+    H0: The gap between adaptive and uniform weights does not degrade as B decreases.
+    H1: The marginal benefit (gap) of adaptive weights significantly diminishes under tight budgets B.
+    test: Paired Wilcoxon signed-rank and ANOVA across budget levels
+    alpha: 0.05
+
+  instances:
+    - lc101
+    - lc201
+    - lr101
+    - lr201
+    - lrc101
+    - lrc201
+
+  data_dir: data/li_lim_100
+  seeds: 10
+  seed_start: 1
+  rho: 0.5
+  lead_time: 15.0
+
+  time_budgets:
+    - 0.05  # Tight budget (50ms)
+    - 0.20  # Medium budget (200ms)
+    - 1.00  # Generous budget (1000ms)
+
+  conditions:
+    - adaptive_weights: false
+      label: ADAPTIVE_OFF (Uniform Random)
+    - adaptive_weights: true
+      label: ADAPTIVE_ON (Roulette Wheel Score)
+
+  output:
+    raw_csv: results/raw/h3_raw.csv
+    summary_table: results/tables/h3_comparison.md
+    figures_dir: results/figures/h3
