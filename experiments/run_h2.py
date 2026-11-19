@@ -32,14 +32,11 @@ from src.simulation.entities import Vehicle
 from src.simulation.engine import SimulationEngine
 
 
-DEFAULT_INSTANCES = (
-    "lc101",
-    "lc201",
-    "lr101",
-    "lr201",
-    "lrc101",
-    "lrc201",
-)
+# Dynamically discover instances in the data directory
+def list_instances(data_dir: Path) -> list[str]:
+    """Return sorted list of instance base names (without .txt) in data_dir."""
+    return [p.stem for p in sorted(data_dir.glob("*.txt"))]
+
 
 CSV_FIELDS = (
     "instance",
@@ -187,9 +184,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--instances",
         nargs="+",
-        default=DEFAULT_INSTANCES,
-        choices=DEFAULT_INSTANCES,
-        help="Instance names.",
+        default=None,
+        help="Instance names. If omitted, all .txt files in data-dir are used.",
     )
     parser.add_argument(
         "--seeds",
@@ -230,7 +226,13 @@ def main() -> int:
     data_dir = args.data_dir.resolve()
     output_path = args.output.resolve()
 
-    instance_paths = [data_dir / f"{name}.txt" for name in args.instances]
+    # Determine which instances to run
+    if args.instances:
+        instance_names = args.instances
+    else:
+        instance_names = list_instances(data_dir)
+    instance_paths = [data_dir / f"{name}.txt" for name in instance_names]
+
     for path in instance_paths:
         if not path.is_file():
             raise FileNotFoundError(f"Missing instance file: {path}")
